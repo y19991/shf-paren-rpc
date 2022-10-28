@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.springframework.org/schema/context
+           http://www.springframework.org/schema/context/spring-context.xsd
+           http://www.springframework.org/schema/mvc
+           http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <!-- 扫描该模块要注入的 bean -->
+    <context:component-scan base-package="com.yafnds"/>
+
+    <!-- 开启 MVC 注解驱动 -->
+    <mvc:annotation-driven/>
+
+    <!-- 视图解析器 -->
+    <bean id="templateResolver" class="org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver">
+        <!-- 前缀 -->
+        <property name="prefix" value="/WEB-INF/templates/"/>
+        <!-- 后缀 -->
+        <property name="suffix" value=".html"/>
+        <!-- 编码格式 -->
+        <property name="characterEncoding" value="UTF-8"/>
+        <!-- 关闭缓存 -->
+        <property name="cacheable" value="false"/>
+        <!--
+         配置模板模式
+            HTML5：表示严格模式
+            LEGACYHTML5：表示宽松模式
+         -->
+        <property name="templateMode" value="LEGACYHTML5"/>
+    </bean>
+
+    <!-- 配置模板引擎 -->
+    <bean id="templateEngine" class="org.thymeleaf.spring5.SpringTemplateEngine">
+        <!-- 将视图解析器引入 Spring -->
+        <property name="templateResolver" ref="templateResolver"/>
+        <!-- 添加spring security 标签支持：sec -->
+        <property name="additionalDialects">
+            <set>
+                <bean class="org.thymeleaf.extras.springsecurity5.dialect.SpringSecurityDialect"/>
+            </set>
+        </property>
+    </bean>
+
+    <!-- 整合 Thymeleaf -->
+    <bean id="viewResolver" class="org.thymeleaf.spring5.view.ThymeleafViewResolver">
+        <!-- 设置编码格式 -->
+        <property name="characterEncoding" value="UTF-8"/>
+        <!-- 引用模板解析器 -->
+        <property name="templateEngine" ref="templateEngine"/>
+    </bean>
+
+    <!-- 静态资源处理器 -->
+    <mvc:default-servlet-handler/>
+
+    <!-- 通过 mvc 标签直接进行转发 -->
+    <!-- 框架主页 -->
+    <mvc:view-controller path="/" view-name="frame/index"/>
+    <!-- 主界面 -->
+    <mvc:view-controller path="/main" view-name="frame/main"/>
+    <!-- 新增角色 -->
+    <mvc:view-controller path="/role/create" view-name="role/create"/>
+    <!-- 新增用户 -->
+    <mvc:view-controller path="/admin/create" view-name="admin/create"/>
+    <!-- 访问字典首页 -->
+    <mvc:view-controller path="/dict" view-name="dict/index"/>
+    <!-- 登录页 -->
+    <mvc:view-controller path="/login" view-name="frame/login"/>
+
+    <!-- 文件上传 -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <!-- 设定文件上传的最大值为100MB，100*1024*1024 -->
+        <property name="maxUploadSize" value="104857600"/>
+        <!-- 设定文件上传时写入内存的最大值，如果小于这个参数不会生成临时文件，默认为10240 -->
+        <property name="maxInMemorySize" value="4096"/>
+        <!-- 设定默认编码 -->
+        <property name="defaultEncoding" value="UTF-8"/>
+    </bean>
+
+</beans>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- Jedis 连接池的相关配置 -->
+    <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        <!-- 最大连接数，默认 8 个 -->
+        <property name="maxTotal" value="100"/>
+        <!-- 最大空闲连接数，默认 8 个 -->
+        <property name="maxIdle" value="50"/>
+        <!-- 允许借调，在获取连接的时候检查有效性，默认 false -->
+        <property name="testOnBorrow" value="true"/>
+        <!-- 允许归还，在 return 给 pool 时，是否提前进行 validate 操作-->
+        <property name="testOnReturn" value="true"/>
+    </bean>
+
+    <!-- 配置 Jedis 的连接池 -->
+    <bean id="jedisPool" class="redis.clients.jedis.JedisPool">
+        <!-- 引入 Jedis 连接池配置 -->
+        <constructor-arg name="poolConfig" ref="jedisPoolConfig"/>
+        <!-- redis 服务器地址 -->
+        <constructor-arg name="host" value="121.43.231.52"/>
+        <!-- redis 端口 -->
+        <constructor-arg name="port" value="6379"/>
+        <!-- 连接 redis 的密码，默认：不需要 -->
+        <constructor-arg name="password" value="2sTi7eUAJ!63Ktk"/>
+        <!-- 超时时间 -->
+        <constructor-arg name="timeout" value="3000"/>
+    </bean>
+
+    <!-- 配置 JedisConnectionFactory -->
+    <bean id="jedisConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+        <!-- 引入 Jedis 连接池配置 -->
+        <property name="poolConfig" ref="jedisPoolConfig"/>
+        <!-- redis 服务器地址 -->
+        <property name="hostName" value="121.43.231.52"/>
+        <!-- redis 端口 -->
+        <property name="port" value="6379"/>
+        <!-- 连接 redis 的密码，默认：不需要 -->
+        <property name="password" value="2sTi7eUAJ!63Ktk"/>
+        <!-- 选择 redis 数据库 -->
+        <property name="database" value="0"/>
+    </bean>
+
+    <!-- 配置 session 共享 -->
+    <bean id="redisHttpSessionConfiguration"
+          class="org.springframework.session.data.redis.config.annotation.web.http.RedisHttpSessionConfiguration">
+
+        <!-- 指定 redis 中存储的 session 的最大闲置时间 -->
+        <property name="maxInactiveIntervalInSeconds" value="1800"/>
+    </bean>
+
+</beans>

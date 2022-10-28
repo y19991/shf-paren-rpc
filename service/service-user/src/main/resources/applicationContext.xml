@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://code.alibabatech.com/schema/dubbo
+        http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
+
+    <!-- 扫描模块中所有接口，自动注入成 bean -->
+    <context:component-scan base-package="com.yafnds"/>
+
+    <!-- 配置数据源 -->
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" destroy-method="close">
+        <property name="username" value="${jdbc.username}" />
+        <property name="password" value="${jdbc.password}" />
+        <property name="url" value="${jdbc.url}" />
+        <property name="driverClassName" value="${jdbc.driver}" />
+    </bean>
+
+    <!-- Spring 整合 Mybatis -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 引入数据源 -->
+        <property name="dataSource" ref="dataSource"/>
+        <!-- 引入 Mybatis 核心配置文件 -->
+        <property name="configLocation" value="classpath:mybatis-config.xml"/>
+        <!-- 指定映射器 XML 配置文件的位置 -->
+        <property name="mapperLocations" value="classpath:mapper/**/*.xml"/>
+    </bean>
+
+    <!--
+        配置 mapper 接口的扫描，可以将指定包下的所有 mapper 接口，
+        通过 SqlSession 创建代理实现类对象，并将这些对象交给 IOC 容器管理
+     -->
+    <bean id="mapperScannerConfigurer" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!--持久层接口所在的包的包名-->
+        <property name="basePackage" value="com.yafnds.mapper"/>
+    </bean>
+
+    <!-- 配置事务管理器 -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!--
+        开启事务注解驱动
+            proxy-target-class="true" 使用 CGLIB 代理方式为 Service 类创建代理对象，以防止加入事务后，dubbo 服务发布不成功
+               原因：
+                1. 事务控制的底层原理是为服务提供者类创建代理对象
+                2. 而默认情况下Spring是基于JDK动态代理方式创建代理对象
+                3. 因此代理对象的完整类名为com.sun.proxy.$Proxy42（最后两位数字不是固定的）
+                4. 导致Dubbo在发布服务前进行包匹配时无法完成匹配，进而没有进行服务的发布
+     -->
+    <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/>
+
+    <!-- 引入分布式服务框架 注册配置文件-->
+    <import resource="classpath:spring-registry.xml"/>
+
+
+</beans>
